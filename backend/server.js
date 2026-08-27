@@ -106,22 +106,7 @@ app.post('/api/admin/orders/:id/ship', async (req, res) => {
         res.status(500).json({ message: "Server Error" });
     }
 });
-// Example of how your login route should look:
-app.post('/login', async (req, res) => {
-    const { email, password } = req.body;
 
-    // 1. Find the user in the database
-    const user = await findUserInDatabase(email);
-
-    // 2. THIS IS THE FIX: Check if the user is missing!
-    if (!user) {
-        return res.status(400).json({ message: "User not found!" });
-    }
-
-    // 3. Now it is safe to compare passwords
-    const isMatch = await bcrypt.compare(password, user.password);
-    // ... rest of your login code
-});
 app.get('/setup-admin', async (req, res) => {
     try {
         // 1. Hash the password so bcrypt can read it later
