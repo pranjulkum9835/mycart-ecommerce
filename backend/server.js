@@ -1,4 +1,4 @@
-require('dotenv').config(); 
+require('dotenv').config();
 const bcrypt = require('bcryptjs');
 const express = require('express');
 const cors = require('cors');
@@ -63,7 +63,7 @@ const Razorpay = require('razorpay');
 
 // Initialize Razorpay
 const razorpay = new Razorpay({
-    key_id: 'rzp_test_YOUR_12345abcde', 
+    key_id: 'rzp_test_YOUR_12345abcde',
     key_secret: 'abc123def456'
 });
 
@@ -76,7 +76,7 @@ app.post('/api/create-payment', async (req, res) => {
             currency: "INR",
             receipt: "receipt_order_1"
         };
-        
+
         const order = await razorpay.orders.create(options);
         res.json({ message: "Success", order: order });
     } catch (error) {
@@ -106,12 +106,28 @@ app.post('/api/admin/orders/:id/ship', async (req, res) => {
         res.status(500).json({ message: "Server Error" });
     }
 });
+// Example of how your login route should look:
+app.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+
+    // 1. Find the user in the database
+    const user = await findUserInDatabase(email);
+
+    // 2. THIS IS THE FIX: Check if the user is missing!
+    if (!user) {
+        return res.status(400).json({ message: "User not found!" });
+    }
+
+    // 3. Now it is safe to compare passwords
+    const isMatch = await bcrypt.compare(password, user.password);
+    // ... rest of your login code
+});
 // --- NEW USER REGISTRATION ---
 app.post('/api/register', async (req, res) => {
     try {
         const { name, email, password } = req.body;
         const hashedPassword = await bcrypt.hash(password, 10); // Encrypt password
-        
+
         await pool.query('INSERT INTO Users (name, email, password_hash) VALUES (?, ?, ?)', [name, email, hashedPassword]);
         res.json({ message: "Registration successful" });
     } catch (error) {
@@ -125,15 +141,15 @@ app.post('/api/login', async (req, res) => {
     try {
         const { email, password } = req.body;
         const [users] = await pool.query('SELECT * FROM Users WHERE email = ?', [email]);
-        
+
         if (users.length === 0) return res.status(401).json({ message: "User not found" });
-        
+
         const isValid = await bcrypt.compare(password, users[0].password_hash);
         if (!isValid) return res.status(401).json({ message: "Invalid password" });
-        
-        res.json({ 
-            message: "Success", 
-            user: { id: users[0].user_id, name: users[0].name, role: users[0].role } 
+
+        res.json({
+            message: "Success",
+            user: { id: users[0].user_id, name: users[0].name, role: users[0].role }
         });
     } catch (error) {
         console.error(error);
@@ -147,7 +163,7 @@ app.get('/api/products/:id', async (req, res) => {
     try {
         const productId = req.params.id;
         const [rows] = await pool.query('SELECT * FROM Products WHERE product_id = ?', [productId]);
-        
+
         if (rows.length > 0) {
             res.json({ message: "Success", product: rows[0] });
         } else {
