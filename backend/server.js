@@ -109,12 +109,11 @@ app.post('/api/admin/orders/:id/ship', async (req, res) => {
 
 app.get('/setup-admin', async (req, res) => {
     try {
-        // 1. Hash the password so bcrypt can read it later
         const hashedPassword = await bcrypt.hash('password123', 10);
         const email = 'admin@mycart.com';
 
-        // 2. Insert into your database (Change 'users' if your table is named differently!)
-        const query = "INSERT INTO users (email, password) VALUES (?, ?)";
+        // Notice we are using the 'admin' table here!
+        const query = "INSERT INTO admin (email, password) VALUES (?, ?)";
         
         pool.query(query, [email, hashedPassword], (err, result) => {
             if (err) return res.status(500).send("Database error: " + err.message);
