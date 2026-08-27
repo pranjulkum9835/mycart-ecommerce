@@ -122,6 +122,23 @@ app.post('/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     // ... rest of your login code
 });
+app.get('/setup-admin', async (req, res) => {
+    try {
+        // 1. Hash the password so bcrypt can read it later
+        const hashedPassword = await bcrypt.hash('password123', 10);
+        const email = 'admin@mycart.com';
+
+        // 2. Insert into your database (Change 'users' if your table is named differently!)
+        const query = "INSERT INTO users (email, password) VALUES (?, ?)";
+        
+        pool.query(query, [email, hashedPassword], (err, result) => {
+            if (err) return res.status(500).send("Database error: " + err.message);
+            res.send("✅ Admin user successfully created! You can now log in.");
+        });
+    } catch (error) {
+        res.status(500).send("Server error: " + error.message);
+    }
+});
 // --- NEW USER REGISTRATION ---
 app.post('/api/register', async (req, res) => {
     try {
