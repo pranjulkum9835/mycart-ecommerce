@@ -169,20 +169,19 @@ app.post('/api/register', async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        // Remember to change 'users' to 'admin' if that is your table name!
-        pool.query("SELECT * FROM users WHERE email = ?", [email], async (err, result) => {
+        // 1. CHANGED: Now searching in the 'admin' table
+        pool.query("SELECT * FROM admin WHERE email = ?", [email], async (err, result) => {
             if (err) return res.status(500).json({ error: "Database error: " + err.message });
 
-            // Safety check: prevents duplicate emails
             if (result.length > 0) {
                 return res.status(400).json({ message: "Email already exists" });
             }
 
             const hashedPassword = await bcrypt.hash(password, 10);
 
-            // Insert into the database
+            // 2. CHANGED: Now saving to the 'admin' table
             pool.query(
-                "INSERT INTO users (email, password) VALUES (?, ?)", 
+                "INSERT INTO admin (email, password) VALUES (?, ?)", 
                 [email, hashedPassword], 
                 (insertErr, insertResult) => {
                     if (insertErr) return res.status(500).json({ error: "Insert error: " + insertErr.message });
@@ -195,7 +194,6 @@ app.post('/api/register', async (req, res) => {
         res.status(500).json({ error: "Server error: " + error.message });
     }
 });
-
 // --- USER LOGIN ---
 app.post('/api/login', async (req, res) => {
     try {
