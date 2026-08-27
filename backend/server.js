@@ -1,0 +1,167 @@
+require('dotenv').config(); 
+const bcrypt = require('bcryptjs');
+const express = require('express');
+const cors = require('cors');
+const mysql = require('mysql2/promise');
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+// Add this line to merge your frontend and backend!
+// Serve static files and automatically hide the .html extensions!
+app.use(express.static('public', { extensions: ['html'] }));
+
+// ... (The rest of your database and API route code stays exactly the same)
+
+// 1. Connect to the Database
+const pool = mysql.createPool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+});
+
+// Test the connection
+pool.getConnection()
+    .then(() => console.log('✅ Successfully connected to MySQL Database!'))
+    .catch((err) => console.error('❌ Database connection failed:', err));
+
+
+// 2. THIS IS YOUR ROUTE (Where the frontend asks for products)
+app.get('/api/products', async (req, res) => {
+    try {
+        const [rows] = await pool.query('SELECT * FROM Products');
+        res.json({
+            message: "Success",
+            products: rows
+        });
+    } catch (error) {
+        console.error('Error fetching products:', error);
+        res.status(500).json({ message: "Server Error" });
+    }
+});
+// Fetch all products from the database
+app.get('/api/products', async (req, res) => {
+    try {
+        // Ask the database for all rows in the Products table
+        const [rows] = await pool.query('SELECT * FROM Products');
+        res.json({
+            message: "Success",
+            products: rows
+        });
+    } catch (error) {
+        console.error('Error fetching products:', error);
+        res.status(500).json({ message: "Server Error" });
+    }
+});
+// Add this near the top with your other requires:
+const Razorpay = require('razorpay');
+
+// Initialize Razorpay
+const razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET
+});
+
+// Add this route above app.listen:
+// This creates a digital "bill" before the user actually pays
+app.post('/api/create-payment', async (req, res) => {
+    try {
+        const options = {
+            amount: 50000, // Amount in paisa (50000 paisa = ₹500)
+            currency: "INR",
+            receipt: "receipt_order_1"
+        };
+        
+        const order = await razorpay.orders.create(options);
+        res.json({ message: "Success", order: order });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Something went wrong" });
+    }
+});
+// Admin Route: Get all orders
+app.get('/api/admin/orders', async (req, res) => {
+    try {
+        const [rows] = await pool.query('SELECT * FROM Orders ORDER BY order_id DESC');
+        res.json({ message: "Success", orders: rows });
+    } catch (error) {
+        console.error('Error fetching orders:', error);
+        res.status(500).json({ message: "Server Error" });
+    }
+});
+
+// Admin Route: Update order to 'Shipped'
+app.post('/api/admin/orders/:id/ship', async (req, res) => {
+    try {
+        const orderId = req.params.id;
+        await pool.query('UPDATE Orders SET status = "shipped" WHERE order_id = ?', [orderId]);
+        res.json({ message: "Order updated successfully" });
+    } catch (error) {
+        console.error('Error updating order:', error);
+        res.status(500).json({ message: "Server Error" });
+    }
+});
+// --- NEW USER REGISTRATION ---
+app.post('/api/register', async (req, res) => {
+    try {
+        const { name, email, password } = req.body;
+        const hashedPassword = await bcrypt.hash(password, 10); // Encrypt password
+        
+        await pool.query('INSERT INTO Users (name, email, password_hash) VALUES (?, ?, ?)', [name, email, hashedPassword]);
+        res.json({ message: "Registration successful" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Email already exists or server error" });
+    }
+});
+
+// --- USER LOGIN ---
+app.post('/api/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const [users] = await pool.query('SELECT * FROM Users WHERE email = ?', [email]);
+        
+        if (users.length === 0) return res.status(401).json({ message: "User not found" });
+        
+        const isValid = await bcrypt.compare(password, users[0].password_hash);
+        if (!isValid) return res.status(401).json({ message: "Invalid password" });
+        
+        res.json({ 
+            message: "Success", 
+            user: { id: users[0].user_id, name: users[0].name, role: users[0].role } 
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server Error" });
+    }
+});
+
+// --- GET SINGLE PRODUCT DETAILS ---
+// Fetch a single product by ID
+app.get('/api/products/:id', async (req, res) => {
+    try {
+        const productId = req.params.id;
+        const [rows] = await pool.query('SELECT * FROM Products WHERE product_id = ?', [productId]);
+        
+        if (rows.length > 0) {
+            res.json({ message: "Success", product: rows[0] });
+        } else {
+            res.status(404).json({ message: "Product not found" });
+        }
+    } catch (error) {
+        console.error("Database fetch error:", error);
+        res.status(500).json({ message: "Server Error" });
+    }
+});
+
+
+// 3. THIS IS THE APP.LISTEN BLOCK (Always at the very bottom)
+const PORT = 5000;
+app.listen(PORT, () => {
+    console.log(`🚀 MyCart Server is running on http://localhost:${PORT}`);
+});

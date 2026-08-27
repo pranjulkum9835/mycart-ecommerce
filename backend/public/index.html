@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>MyCart | Store</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Clean Professional Header -->
+    <header>
+        <div class="logo-box">
+            <a href="index.html">MyCart</a>
+        </div>
+
+        <div class="store-search">
+            <input type="text" id="search-input" placeholder="Search products...">
+            <button id="search-btn" class="search-btn">Search</button>
+        </div>
+
+        <div class="header-links">
+            <a href="login.html" id="login-btn" class="login-btn">Login</a>
+            <a href="admin.html" class="header-link">Admin Panel</a>
+            <a href="cart.html" id="cart-icon" class="header-link" style="position: relative; font-size: 18px;">
+                🛒 <span id="cart-count">0</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Category Strip -->
+    <div class="store-cat-strip">
+        <span class="cat-item" onclick="filterCategory('All')">All Products</span>
+        <span class="cat-item" onclick="filterCategory('Electronics')">Electronics</span>
+        <span class="cat-item" onclick="filterCategory('Fashion')">Fashion</span>
+        <span class="cat-item" onclick="filterCategory('Books')">Books</span>
+    </div>
+
+    <!-- Main Content -->
+    <main>
+        <div class="section-box">
+            <h2 class="section-title" style="color: #f43f5e;">🔥 Flash Sale</h2>
+            <div id="sale-container" class="product-grid"></div>
+        </div>
+
+        <div class="section-box">
+            <h2 class="section-title">Electronics & Gadgets</h2>
+            <div id="electronics-container" class="product-grid"></div>
+        </div>
+
+        <div class="section-box">
+            <h2 class="section-title">Trending Fashion</h2>
+            <div id="fashion-container" class="product-grid"></div>
+        </div>
+
+        <div class="section-box">
+            <h2 class="section-title">Books & Guides</h2>
+            <div id="books-container" class="product-grid"></div>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+    <!-- Functional Footer -->
+    <footer style="background-color: #1e293b; color: #cbd5e1; padding: 40px 40px; margin-top: 40px; font-size: 14px;">
+        <div
+            style="max-width: 1200px; margin: auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px;">
+            <div>
+                <h4 style="color: white; margin-bottom: 15px; font-size: 15px;">About MyCart</h4>
+                <ul style="list-style: none; padding: 0; line-height: 2;">
+                    <li><a href="#"
+                            onclick="alert('MyCart is a full-stack e-commerce project built for CodeAlpha.'); return false;"
+                            style="color: #cbd5e1; text-decoration: none;">About Us</a></li>
+                    <li><a href="#" onclick="alert('Contact: support@mycart.com'); return false;"
+                            style="color: #cbd5e1; text-decoration: none;">Contact Us</a></li>
+                    <li><a href="#" onclick="alert('We are hiring developers!'); return false;"
+                            style="color: #cbd5e1; text-decoration: none;">Careers</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 style="color: white; margin-bottom: 15px; font-size: 15px;">Help & Support</h4>
+                <ul style="list-style: none; padding: 0; line-height: 2;">
+                    <li><a href="#" onclick="alert('Secure online payments enabled via Razorpay & UPI.'); return false;"
+                            style="color: #cbd5e1; text-decoration: none;">Payments</a></li>
+                    <li><a href="#" onclick="alert('Standard shipping takes 3-5 business days.'); return false;"
+                            style="color: #cbd5e1; text-decoration: none;">Shipping Info</a></li>
+                    <li><a href="#" onclick="alert('Easy 7-day return policy available.'); return false;"
+                            style="color: #cbd5e1; text-decoration: none;">Returns & Cancellations</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 style="color: white; margin-bottom: 15px; font-size: 15px;">Policy</h4>
+                <ul style="list-style: none; padding: 0; line-height: 2;">
+                    <li><a href="#" onclick="alert('All returns subject to verification.'); return false;"
+                            style="color: #cbd5e1; text-decoration: none;">Return Policy</a></li>
+                    <li><a href="#" onclick="alert('By using this site, you agree to terms.'); return false;"
+                            style="color: #cbd5e1; text-decoration: none;">Terms Of Use</a></li>
+                    <li><a href="#" onclick="alert('Your data is secure with us.'); return false;"
+                            style="color: #cbd5e1; text-decoration: none;">Privacy Policy</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 style="color: white; margin-bottom: 15px; font-size: 15px;">Stay Connected</h4>
+                <p style="color: #94a3b8; line-height: 1.6;">Experience seamless full-stack shopping built from the
+                    ground up.</p>
+            </div>
+        </div>
+        <div
+            style="text-align: center; margin-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; color: #94a3b8;">
+            &copy; 2026 MyCart.com - All Rights Reserved.
+        </div>
+    </footer>
+</body>
+
+</html>

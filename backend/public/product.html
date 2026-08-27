@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MyCart | Product Specs & Reviews</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .product-page-wrapper { max-width: 1200px; margin: 30px auto; padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .image-gallery img { width: 100%; height: 450px; object-fit: cover; border-radius: 8px; border: 1px solid #e2e8f0; }
+        
+        .product-info h1 { font-size: 28px; color: #1e293b; margin-bottom: 10px; }
+        .rating-stars { color: #f59e0b; font-size: 18px; margin-bottom: 15px; }
+        .price-tag { font-size: 32px; font-weight: bold; color: #0284c7; margin-bottom: 20px; }
+        
+        /* Specs Table */
+        .specs-table { width: 100%; border-collapse: collapse; margin-top: 20px; margin-bottom: 30px; }
+        .specs-table th, .specs-table td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; font-size: 14px; }
+        .specs-table th { color: #64748b; width: 40%; background: #f8fafc; }
+
+        .btn-add { background: #0ea5e9; color: white; border: none; padding: 15px 30px; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; transition: 0.2s; }
+        .btn-add:hover { background: #0284c7; }
+
+        /* Review Section */
+        .reviews-section { grid-column: span 2; margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 30px; }
+        .review-card { background: #f8fafc; padding: 20px; border-radius: 6px; margin-bottom: 15px; }
+        .review-card h4 { margin-bottom: 5px; color: #1e293b; }
+        .review-date { font-size: 12px; color: #94a3b8; margin-bottom: 10px; display: block; }
+    </style>
+</head>
+<body style="background-color: #f4f6f8;">
+    <header>
+        <div class="logo-box"><a href="index.html" style="color:white; text-decoration:none; font-size:24px; font-weight:bold;">MyCart</a></div>
+    </header>
+
+    <div id="details-content">
+        <p style="text-align:center; padding: 50px;">Loading product details...</p>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const productId = urlParams.get('id');
+
+            // 1. Check if we actually clicked a product
+            if (!productId) {
+                document.getElementById('details-content').innerHTML = "<h2 style='text-align:center; padding: 50px;'>No product selected. Please go to the Home page and click on a product.</h2>";
+                return;
+            }
+
+            try {
+                // 2. Fetch data from backend
+                const response = await fetch(`/api/products/${productId}`);
+                if (!response.ok) throw new Error("Backend server is not responding correctly.");
+                
+                const data = await response.json();
+                
+                if (data.message === "Success" && data.product) {
+                    const p = data.product;
+                    
+                    // 3. SAFE parsing for Specifications
+                    let specsHTML = '';
+                    try {
+                        if (p.specifications && p.specifications !== "null" && p.specifications !== "") {
+                            // Only parse if it looks like a JSON object/array
+                            const specs = (typeof p.specifications === 'string' && p.specifications.startsWith('{')) 
+                                ? JSON.parse(p.specifications) 
+                                : { "Info": p.specifications };
+
+                            for (const [key, value] of Object.entries(specs)) {
+                                specsHTML += `<tr><th>${key}</th><td>${value}</td></tr>`;
+                            }
+                        }
+                    } catch (parseError) {
+                        console.error("Specs parsing failed, showing raw text instead.", parseError);
+                        specsHTML = `<tr><th>Details</th><td>${p.specifications}</td></tr>`;
+                    }
+
+                    // 4. Draw the page
+                    document.getElementById('details-content').innerHTML = `
+                        <div class="product-page-wrapper">
+                            <!-- Left: Image -->
+                            <div class="image-gallery">
+                                <!-- Using a reliable fallback image system -->
+                                <img src="https://picsum.photos/seed/${p.product_id + 50}/600/600" alt="${p.name}" onerror="this.src='https://via.placeholder.com/600/1e293b/ffffff?text=Image+Not+Found'">
+                            </div>
+
+                            <!-- Right: Details & Specs -->
+                            <div class="product-info">
+                                <h1>${p.name}</h1>
+                                <div class="rating-stars">★★★★☆ <span style="color:#64748b; font-size:14px;">(${p.rating || 4.5} / 5)</span></div>
+                                <div class="price-tag">₹${p.price}</div>
+                                <p style="color: #475569; line-height: 1.6;">${p.description}</p>
+                                
+                                <table class="specs-table">
+                                    ${specsHTML || '<tr><td colspan="2">Standard specifications apply.</td></tr>'}
+                                </table>
+
+                                <button class="btn-add" onclick="alert('Added to Cart!')">ADD TO CART</button>
+                            </div>
+
+                            <!-- Bottom: Reviews -->
+                            <div class="reviews-section">
+                                <h2 style="margin-bottom: 20px;">Customer Reviews</h2>
+                                <div class="review-card">
+                                    <h4>Excellent for my project!</h4>
+                                    <span class="review-date">Reviewed recently</span>
+                                    <div class="rating-stars" style="font-size: 14px;">★★★★★</div>
+                                    <p style="color: #475569; font-size: 14px; line-height: 1.5;">The hardware integration was seamless and everything functioned perfectly out of the box.</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('details-content').innerHTML = "<h2 style='text-align:center;'>Product not found in database.</h2>";
+                }
+            } catch (error) {
+                console.error("Critical Fetch Error:", error);
+                document.getElementById('details-content').innerHTML = `<div style="text-align:center; padding: 50px; color: red;"><h3>Error loading product.</h3><p>${error.message}</p><p>Press F12 and check the Console for details.</p></div>`;
+            }
+        });
+    </script>
+</body>
+</html>
