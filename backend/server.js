@@ -123,6 +123,28 @@ app.get('/setup-admin', async (req, res) => {
         res.status(500).send("Server error: " + error.message);
     }
 });
+app.get('/reset-admin', async (req, res) => {
+    try {
+        // We will force the password to be exactly this:
+        const hashedPassword = await bcrypt.hash('password123', 10);
+        const email = 'admin@mycart.com';
+
+        // This query specifically UPDATES the existing password
+        const query = "UPDATE admin SET password = ? WHERE email = ?";
+        
+        pool.query(query, [hashedPassword, email], (err, result) => {
+            if (err) return res.status(500).send("Database error: " + err.message);
+            
+            if (result.affectedRows === 0) {
+                 return res.send("❌ Error: No admin found with that email. Run /setup-admin first.");
+            }
+            
+            res.send("✅ Admin password successfully RESET! You can now log in with: password123");
+        });
+    } catch (error) {
+        res.status(500).send("Server error: " + error.message);
+    }
+});
 app.post('/login', (req, res) => {
     const { email, password } = req.body;
     
