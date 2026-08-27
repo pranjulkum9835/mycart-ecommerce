@@ -166,15 +166,33 @@ app.post('/login', (req, res) => {
 });
 // --- NEW USER REGISTRATION ---
 app.post('/api/register', async (req, res) => {
-    try {
-        const { name, email, password } = req.body;
-        const hashedPassword = await bcrypt.hash(password, 10); // Encrypt password
+    const { email, password } = req.body;
 
-        await pool.query('INSERT INTO Users (name, email, password_hash) VALUES (?, ?, ?)', [name, email, hashedPassword]);
-        res.json({ message: "Registration successful" });
+    try {
+        // Remember to change 'users' to 'admin' if that is your table name!
+        pool.query("SELECT * FROM users WHERE email = ?", [email], async (err, result) => {
+            if (err) return res.status(500).json({ error: "Database error: " + err.message });
+
+            // Safety check: prevents duplicate emails
+            if (result.length > 0) {
+                return res.status(400).json({ message: "Email already exists" });
+            }
+
+            const hashedPassword = await bcrypt.hash(password, 10);
+
+            // Insert into the database
+            pool.query(
+                "INSERT INTO users (email, password) VALUES (?, ?)", 
+                [email, hashedPassword], 
+                (insertErr, insertResult) => {
+                    if (insertErr) return res.status(500).json({ error: "Insert error: " + insertErr.message });
+                    
+                    res.status(201).json({ message: "✅ User registered successfully!" });
+                }
+            );
+        });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Email already exists or server error" });
+        res.status(500).json({ error: "Server error: " + error.message });
     }
 });
 
