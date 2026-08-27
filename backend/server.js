@@ -124,6 +124,25 @@ app.get('/setup-admin', async (req, res) => {
         res.status(500).send("Server error: " + error.message);
     }
 });
+app.post('/login', (req, res) => {
+    const { email, password } = req.body;
+    
+    pool.query("SELECT * FROM admin WHERE email = ?", [email], async (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
+
+        // +++ ADD THESE 3 LINES RIGHT HERE +++
+        if (result.length === 0) {
+            return res.status(401).json({ message: "Invalid email or password" });
+        }
+        // ++++++++++++++++++++++++++++++++++++
+
+        const user = result[0];
+        // Now this won't crash because we know 'user' actually exists!
+        const isMatch = await bcrypt.compare(password, user.password); 
+        
+        // ... the rest of your login code ...
+    });
+});
 // --- NEW USER REGISTRATION ---
 app.post('/api/register', async (req, res) => {
     try {
